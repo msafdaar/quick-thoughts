@@ -33,10 +33,10 @@ class WidgetEditActivity : ComponentActivity() {
 
 val appWidgetId = intent.getIntExtra(
     AppWidgetManager.EXTRA_APPWIDGET_ID,
-    AppWidgetManager.INVALID_APP_WIDGET_ID  // Line 37
+    AppWidgetManager.INVALID_APPWIDGET_ID  // Changed from INVALID_APP_WIDGET_ID
 )
 
-if (appWidgetId == AppWidgetManager.INVALID_APP_WIDGET_ID) {  // Line 40
+if (appWidgetId == AppWidgetManager.INVALID_APPWIDGET_ID) {  // Changed from INVALID_APP_WIDGET_ID
     finish()
     return
 }
