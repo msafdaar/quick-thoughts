@@ -133,6 +133,7 @@ fun VaultStatusScreen(vaultManager: VaultManager, vaultUri: String?) {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FileEditorScreen(
     vaultManager: VaultManager,

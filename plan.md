@@ -1,50 +1,61 @@
-### 📋 Copy-and-Paste Prompt for Your Coding Agent
-
-> We have successfully fixed the build pipeline infrastructure, but the Kotlin compilation is failing due to some import mismatches, unresolved references, and legacy Jetpack Glance API usage.
-> Please scan the codebase and apply these 4 specific structural fixes immediately:
-> #### 1. Fix `DocumentFile` Imports & Dependencies
-> 
-> 
-> * In **`app/build.gradle.kts`**, make sure this dependency is explicitly added:
-> `implementation("androidx.documentfile:documentfile:1.0.1")`
-> * In `CommitAction.kt`, `DraftWidget.kt`, `MainActivity.kt`, and `WidgetEditActivity.kt`, fix the broken `documentfile` imports. The correct, case-sensitive import is:
-> `import androidx.documentfile.provider.DocumentFile`
-> * Ensure any calls trying to resolve `.uri` on a `DocumentFile` object are using the proper getter method: `.uri` (and verify the variable itself is not shadowed or un-scoped).
-> 
-> 
-> #### 2. Fix Missing Widget ID Constants
-> 
-> 
-> * In `MainActivity.kt`, `WidgetConfigActivity.kt`, and `WidgetEditActivity.kt`, you are using `INVALID_APP_WIDGET_ID` without importing it. Add this explicit import to the top of those files:
-> `import android.appwidget.AppWidgetManager.INVALID_APP_WIDGET_ID`
-> 
-> 
-> #### 3. Fix `ColorProvider` Conflicts in `DraftWidget.kt`
-> 
-> 
-> * You have duplicate/ambiguous imports for `ColorProvider`. Remove any standard Compose color imports from `DraftWidget.kt` that conflict, and strictly use the Glance unit provider:
-> `import androidx.glance.unit.ColorProvider`
-> 
-> 
-> #### 4. Update `DraftWidget.kt` to Modern Jetpack Glance API (v1.1.1)
-> 
-> 
-> * The widget class is failing because it's mixing up old Glance syntax with the new version. Rewrite the core of `DraftWidget` to implement `GlanceAppWidget()` properly using `provideGlance`:
-> ```kotlin
-> class DraftWidget : GlanceAppWidget() {
->     override suspend fun provideGlance(context: Context, id: GlanceId) {
->         provideContent {
->             // Your Glance Widget Composable layout code goes here
->         }
->     }
-> }
-> 
-> ```
-> 
-> 
-> * Remove any legacy `override fun provideContent()` or raw `Content()` overrides that do not match this modern template.
-> 
-> 
-> Go ahead and update these files sequentially, ensure the imports match perfectly, and let me know when you are done so I can re-run the build.
-
----
+the github actions is failing with this error. please find out how can we fix it
+Run gradle assembleDebug
+Welcome to Gradle 8.9!
+Here are the highlights of this release:
+ - Enhanced Error and Warning Messages
+ - IDE Integration Improvements
+ - Daemon JVM Information
+For more details see https://docs.gradle.org/8.9/release-notes.html
+Starting a Gradle Daemon (subsequent builds will be faster)
+> Task :app:preBuild UP-TO-DATE
+> Task :app:preDebugBuild UP-TO-DATE
+> Task :app:mergeDebugNativeDebugMetadata NO-SOURCE
+> Task :app:checkKotlinGradlePluginConfigurationErrors SKIPPED
+> Task :app:generateDebugResValues
+> Task :app:checkDebugAarMetadata
+> Task :app:mapDebugSourceSetPaths
+> Task :app:generateDebugResources
+> Task :app:packageDebugResources
+> Task :app:mergeDebugResources
+> Task :app:createDebugCompatibleScreenManifests
+> Task :app:extractDeepLinksDebug
+> Task :app:parseDebugLocalResources
+> Task :app:processDebugMainManifest
+> Task :app:processDebugManifest
+> Task :app:processDebugManifestForPackage
+> Task :app:javaPreCompileDebug
+> Task :app:mergeDebugShaders
+> Task :app:compileDebugShaders NO-SOURCE
+> Task :app:generateDebugAssets UP-TO-DATE
+> Task :app:mergeDebugAssets
+> Task :app:compressDebugAssets
+> Task :app:desugarDebugFileDependencies
+> Task :app:processDebugResources
+> Task :app:checkDebugDuplicateClasses
+e: file:///home/runner/work/quick-thoughts/quick-thoughts/app/src/main/java/com/example/quickthoughts/MainActivity.kt:20:43 Unresolved reference 'INVALID_APP_WIDGET_ID'.
+> Task :app:compileDebugKotlin FAILED
+e: file:///home/runner/work/quick-thoughts/quick-thoughts/app/src/main/java/com/example/quickthoughts/MainActivity.kt:37:13 Unresolved reference 'INVALID_APP_WIDGET_ID'.
+e: file:///home/runner/work/quick-thoughts/quick-thoughts/app/src/main/java/com/example/quickthoughts/MainActivity.kt:63:35 Unresolved reference 'INVALID_APP_WIDGET_ID'.
+e: file:///home/runner/work/quick-thoughts/quick-thoughts/app/src/main/java/com/example/quickthoughts/MainActivity.kt:65:31 Unresolved reference 'INVALID_APP_WIDGET_ID'.
+e: file:///home/runner/work/quick-thoughts/quick-thoughts/app/src/main/java/com/example/quickthoughts/MainActivity.kt:167:13 This material API is experimental and is likely to change or to be removed in the future.
+e: file:///home/runner/work/quick-thoughts/quick-thoughts/app/src/main/java/com/example/quickthoughts/WidgetConfigActivity.kt:5:43 Unresolved reference 'INVALID_APP_WIDGET_ID'.
+e: file:///home/runner/work/quick-thoughts/quick-thoughts/app/src/main/java/com/example/quickthoughts/WidgetConfigActivity.kt:20:31 Unresolved reference 'INVALID_APP_WIDGET_ID'.
+e: file:///home/runner/work/quick-thoughts/quick-thoughts/app/src/main/java/com/example/quickthoughts/WidgetConfigActivity.kt:34:54 Unresolved reference 'INVALID_APP_WIDGET_ID'.
+e: file:///home/runner/work/quick-thoughts/quick-thoughts/app/src/main/java/com/example/quickthoughts/WidgetConfigActivity.kt:39:28 Unresolved reference 'INVALID_APP_WIDGET_ID'.
+e: file:///home/runner/work/quick-thoughts/quick-thoughts/app/src/main/java/com/example/quickthoughts/WidgetEditActivity.kt:4:43 Unresolved reference 'INVALID_APP_WIDGET_ID'.
+e: file:///home/runner/work/quick-thoughts/quick-thoughts/app/src/main/java/com/example/quickthoughts/WidgetEditActivity.kt:37:13 Unresolved reference 'INVALID_APP_WIDGET_ID'.
+e: file:///home/runner/work/quick-thoughts/quick-thoughts/app/src/main/java/com/example/quickthoughts/WidgetEditActivity.kt:40:28 Unresolved reference 'INVALID_APP_WIDGET_ID'.
+> Task :app:mergeExtDexDebug
+FAILURE: Build failed with an exception.
+* What went wrong:
+Execution failed for task ':app:compileDebugKotlin'.
+> A failure occurred while executing org.jetbrains.kotlin.compilerRunner.GradleCompilerRunnerWithWorkers$GradleKotlinCompilerWorkAction
+   > Compilation error. See log for more details
+* Try:
+> Run with --stacktrace option to get the stack trace.
+> Run with --info or --debug option to get more log output.
+> Run with --scan to get full insights.
+> Get more help at https://help.gradle.org.
+BUILD FAILED in 2m 10s
+21 actionable tasks: 21 executed
+Error: Process completed with exit code 1.
