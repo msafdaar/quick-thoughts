@@ -26,7 +26,7 @@ jobs:
         gradle-version: 8.9 # Tells GitHub to install Gradle globally, bypassing the missing 'gradlew' script!
 
     - name: Assemble Debug APK
-      run: gradle assembleDebug
+      run: gradle assembleDebug --stacktrace --info --scan --no-daemon
 
     - name: Upload Compiled APK Artifacts
       uses: actions/upload-artifact@v4
