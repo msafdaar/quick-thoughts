@@ -23,7 +23,7 @@ jobs:
     - name: Setup Global Gradle
       uses: gradle/actions/setup-gradle@v3
       with:
-        gradle-version: 8.7 # Tells GitHub to install Gradle globally, bypassing the missing 'gradlew' script!
+        gradle-version: 8.9 # Tells GitHub to install Gradle globally, bypassing the missing 'gradlew' script!
 
     - name: Assemble Debug APK
       run: gradle assembleDebug
