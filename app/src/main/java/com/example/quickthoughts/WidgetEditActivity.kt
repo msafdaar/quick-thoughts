@@ -103,7 +103,7 @@ fun EditOverlayScreen(appWidgetId: Int, onDismiss: () -> Unit) {
                         
                         val updatedText = FileHelper.updateFileWithDraft(fullText, text)
                         
-                        context.contentResolver.openOutputStream(file.uri, "w")?.use { output ->
+                        context.contentResolver.openOutputStream(file.uri)?.use { output ->
                             output.write(updatedText.toByteArray())
                         }
                         DraftWidget().updateAll(context)

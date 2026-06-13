@@ -177,7 +177,7 @@ fun FileEditorScreen(
                             val tree = DocumentFile.fromTreeUri(context, vaultUri)
                             val file = tree?.findFile(filename)
                             if (file != null) {
-                                context.contentResolver.openOutputStream(file.uri, "w")?.use { output ->
+                                context.contentResolver.openOutputStream(file.uri)?.use { output ->
                                     output.write(fileContent.toByteArray())
                                 }
                             }
