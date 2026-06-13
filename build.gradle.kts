@@ -1,6 +1,18 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
-plugins {
-    alias(libs.plugins.android.application) apply false
-    alias(libs.plugins.kotlin.android) apply false
-    alias(libs.plugins.compose.compiler) apply false
+pluginManagement {
+    repositories {
+        google()            // <-- Explictly tells Gradle to look in Google's warehouse for the Android plugin
+        mavenCentral()
+        gradlePluginPortal()
+    }
 }
+
+dependencyResolutionManagement {
+    repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS)
+    repositories {
+        google()            // <-- Tells your app modules where to download UI packages like Jetpack Compose/Glance
+        mavenCentral()
+    }
+}
+
+rootProject.name = "quick-thoughts"
+include(":app")
