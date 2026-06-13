@@ -1,51 +1,40 @@
 package com.example.quickthoughts
 
+import android.appwidget.AppWidgetManager
 import android.content.Context
-import androidx.glance.GlanceId
-import androidx.glance.appwidget.GlanceAppWidget
-import androidx.glance.appwidget.provideContent
-import androidx.glance.layout.*
-import androidx.glance.text.Text
-import androidx.glance.Button
-import androidx.glance.action.actionStartActivity
-import androidx.glance.GlanceModifier
-import androidx.glance.background
-import androidx.glance.unit.ColorProvider
+import android.net.Uri
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import androidx.glance.text.TextStyle
-import androidx.glance.unit.ColorProvider
+import androidx.documentfile.provider.DocumentFile
+import androidx.glance.Button
+import androidx.glance.GlanceId
+import androidx.glance.GlanceModifier
+import androidx.glance.action.ActionParameters
+import androidx.glance.action.actionParametersOf
+import androidx.glance.action.actionStartActivity
+import androidx.glance.action.clickable
+import androidx.glance.appwidget.GlanceAppWidget
+import androidx.glance.appwidget.action.actionRunCallback
 import androidx.glance.appwidget.appWidgetBackground
 import androidx.glance.appwidget.cornerRadius
-import androidx.glance.color.ColorProvider
-import androidx.glance.text.FontWeight
-import androidx.glance.unit.ColorProvider
-
+import androidx.glance.appwidget.provideContent
+import androidx.glance.background
+import androidx.glance.layout.*
 import androidx.glance.state.GlanceStateDefinition
-import androidx.glance.appwidget.state.updateAppWidgetState
-import androidx.glance.currentGlanceId
 import androidx.glance.state.PreferencesGlanceStateDefinition
-import kotlinx.coroutines.flow.first
-
-import androidx.glance.action.actionParametersOf
-import androidx.glance.action.ActionParameters
-import android.appwidget.AppWidgetManager
-import androidx.glance.action.clickable
-import androidx.glance.action.actionStartActivity
-
-import androidx.glance.appwidget.action.actionRunCallback
-
-import android.net.Uri
-import androidx.documentfile.provider.DocumentFile
-
+import androidx.glance.text.FontWeight
+import androidx.glance.text.Text
+import androidx.glance.text.TextStyle
+import androidx.glance.unit.ColorProvider
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.withContext
 
 class DraftWidget : GlanceAppWidget() {
 
     override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
 
-    override suspend fun provideContent(context: Context, id: GlanceId) {
+    override suspend fun provideGlance(context: Context, id: GlanceId) {
         val vaultManager = VaultManager(context)
         // Extract the actual widget ID from GlanceId
         val appWidgetId = id.toString().substringAfter("AppWidgetId(").substringBefore(")").toIntOrNull() ?: -1

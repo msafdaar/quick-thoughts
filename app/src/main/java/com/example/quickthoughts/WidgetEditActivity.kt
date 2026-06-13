@@ -1,6 +1,7 @@
 package com.example.quickthoughts
 
 import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetManager.INVALID_APP_WIDGET_ID
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -33,10 +34,10 @@ class WidgetEditActivity : ComponentActivity() {
 
         val appWidgetId = intent.getIntExtra(
             AppWidgetManager.EXTRA_APPWIDGET_ID,
-            AppWidgetManager.INVALID_APP_WIDGET_ID
+            INVALID_APP_WIDGET_ID
         )
 
-        if (appWidgetId == AppWidgetManager.INVALID_APP_WIDGET_ID) {
+        if (appWidgetId == INVALID_APP_WIDGET_ID) {
             finish()
             return
         }

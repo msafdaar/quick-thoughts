@@ -17,6 +17,7 @@ import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
 import android.appwidget.AppWidgetManager
+import android.appwidget.AppWidgetManager.INVALID_APP_WIDGET_ID
 import androidx.documentfile.provider.DocumentFile
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -33,7 +34,7 @@ class MainActivity : ComponentActivity() {
         
         val appWidgetId = intent.getIntExtra(
             AppWidgetManager.EXTRA_APPWIDGET_ID,
-            AppWidgetManager.INVALID_APP_WIDGET_ID
+            INVALID_APP_WIDGET_ID
         )
 
         setContent {
@@ -59,9 +60,9 @@ fun MainNavigation(targetWidgetId: Int) {
 
     if (vaultUri == null) {
         VaultSetupScreen(vaultManager, vaultUri)
-    } else if (currentWidgetId != AppWidgetManager.INVALID_APP_WIDGET_ID) {
+    } else if (currentWidgetId != INVALID_APP_WIDGET_ID) {
         FileEditorScreen(vaultManager, vaultUri!!, currentWidgetId) {
-            currentWidgetId = AppWidgetManager.INVALID_APP_WIDGET_ID
+            currentWidgetId = INVALID_APP_WIDGET_ID
         }
     } else {
         VaultStatusScreen(vaultManager, vaultUri)
