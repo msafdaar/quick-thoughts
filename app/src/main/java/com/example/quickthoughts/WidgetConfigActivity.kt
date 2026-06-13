@@ -2,8 +2,7 @@ package com.example.quickthoughts
 
 import android.app.Activity
 import android.appwidget.AppWidgetManager
-import android.appwidget.AppWidgetManager.INVALID_APP_WIDGET_ID
-import android.content.Intent
+import android.appwidget.AppWidgetManagerimport android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -31,12 +30,12 @@ class WidgetConfigActivity : ComponentActivity() {
         val extras = intent.extras
         if (extras != null) {
             appWidgetId = extras.getInt(
-                AppWidgetManager.EXTRA_APPWIDGET_ID, INVALID_APP_WIDGET_ID
+                AppWidgetManager.EXTRA_APPWIDGET_ID, AppWidgetManager.INVALID_APP_WIDGET_ID
             )
         }
 
         // If this activity was started with an invalid widget ID, finish with an error.
-        if (appWidgetId == INVALID_APP_WIDGET_ID) {
+        if (appWidgetId == AppWidgetManager.INVALID_APP_WIDGET_ID) {
             finish()
             return
         }
