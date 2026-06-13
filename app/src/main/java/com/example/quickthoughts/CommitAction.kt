@@ -40,7 +40,7 @@ class CommitAction : ActionCallback {
             val updatedText = FileHelper.commitDraft(fullText, timestamp)
 
             if (updatedText != null) {
-                context.contentResolver.openOutputStream(file.uri, "w")?.use { output ->
+                context.contentResolver.openOutputStream(file.uri)?.use { output ->
                     output.write(updatedText.toByteArray())
                 }
                 DraftWidget().updateAll(context)
