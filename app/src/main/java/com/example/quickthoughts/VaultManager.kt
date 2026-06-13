@@ -38,15 +38,4 @@ class VaultManager(private val context: Context) {
             preferences[stringPreferencesKey("widget_$appWidgetId")] = filename
         }
     }
-
-    fun getDraftFlow(appWidgetId: Int): Flow<String?> = context.dataStore.data
-        .map { preferences ->
-            preferences[stringPreferencesKey("draft_$appWidgetId")]
-        }
-
-    suspend fun saveDraft(appWidgetId: Int, text: String) {
-        context.dataStore.edit { preferences ->
-            preferences[stringPreferencesKey("draft_$appWidgetId")] = text
-        }
-    }
 }

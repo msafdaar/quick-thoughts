@@ -1,81 +1,45 @@
-Prompt 1: Project Setup & Cloud Build Pipeline
+Context: > We have a working Android app built with Kotlin, Jetpack Compose, Jetpack Glance, and Preferences DataStore. Currently, when a user types a draft in WidgetEditActivity, it is saved as a string in Preferences DataStore mapped to the appWidgetId. When they click 'Commit', the app reads that string from DataStore, appends it to the mapped .md file with a timestamp, and clears the DataStore entry. The home screen widget displays the draft string fetched from DataStore.
 
-    Objective: Set up a headless native Android repository that compiles via GitHub Actions.
+Objective:
+Refactor the application so that the uncommitted draft text is stored directly inside the target .md file itself, rather than in Preferences DataStore. We will use HTML comments as delimiters: and. DataStore should only be used to remember the mapping of appWidgetId to the file path/URI.
 
-    "I am building a native Android app using Kotlin and Jetpack Compose. I do not have a local Android SDK or Android Studio. I will build entirely via GitHub Actions.
+Please modify the codebase according to the following requirements:
+1. Create File Helper Utilities
 
-    Please create the base file structure for a standard, modern Android project. I need:
+Implement helper functions to read and write text to a file via its URI using Android's Storage Access Framework:
 
-        A project-level build.gradle.kts
+    extractDraftFromFile(fileText: String): String: Extracts and returns all text sitting between and. Return an empty string if tags aren't found or if the space between them is empty.
 
-        An app-module level build.gradle.kts with dependencies for Jetpack Compose, Jetpack Glance (widgets), and Preferences DataStore.
+    updateFileWithDraft(fileText: String, newDraft: String): String: If the draft tags exist, replace everything between them with newDraft. If they do not exist, append \n\n\nnewDraft\n to the very end of the file text.
 
-        settings.gradle.kts and a minimal AndroidManifest.xml.
+2. Refactor WidgetEditActivity.kt (The Input Overlay)
 
-        A boilerplate MainActivity.kt that displays a 'Hello World' Compose layout.
+    On Launch: Stop reading the live draft from DataStore. Instead, resolve the target .md file using the saved folder URI and filename, read its full text content, and use the helper to extract the draft string. Load this string into the Compose TextField.
 
-        A .github/workflows/build-android.yml file that triggers on a push to main. It should set up Java 21, cache Gradle, run ./gradlew assembleDebug, and upload the resulting debug .apk file as a downloadable build artifact."
+    On Close/Exit (onStop or background dim click): Take the current value of the TextField. In a background thread, read the target file, apply the updateFileWithDraft helper with the new text, overwrite the file via the file output stream, and trigger a Jetpack Glance widget refresh. Remove any local draft writing to DataStore.
 
-Prompt 2: Core Storage & Folder Access
+3. Refactor the Widget View (DraftWidget.kt)
 
-    Objective: Teach the app how to pick and remember a local storage directory.
+    Modify the widget's content provider layout logic. Instead of observing or pulling the draft string from DataStore to display it in the main widget text area, read the target .md file in the background, extract the text between the draft HTML tags, and display that text. If it's empty, display a subtle placeholder like "Tap to sketch a thought...".
 
-    "Modify MainActivity.kt. Implement Android's Storage Access Framework (SAF) using Intent.ACTION_OPEN_DOCUMENT_TREE to let the user select a local directory/folder on their device (like an Obsidian vault).
+4. Refactor the "Commit" Logic (BroadcastReceiver / Worker)
 
-    Once selected, persistently save the folder's folder tree URI and take persistent read/write permissions (contentResolver.takePersistableUriPermission). Store this URI string using Android Preferences DataStore. Update the MainActivity UI to display whether a vault folder is currently linked or not."
+When the checkmark button in the widget nav bar is clicked:
 
-Prompt 3: Widget Structure & Instance Mapping
+    Read the target .md file text.
 
-    Objective: Deploy a home screen widget and map multiple instances to different files.
+    Extract the uncommitted draft string from between the tags. If the draft is completely blank, abort the operation.
 
-    "Using Jetpack Glance, create a basic home screen widget (DraftWidget.kt) and its corresponding GlanceAppWidgetReceiver. The widget layout should feature a thin top navigation bar showing a filename, an 'Open app' icon button, and a 'Commit' checkmark icon button. The rest of the widget body should be a text container.
+    Perform a permanent append/transform:
 
-    Create a widget configuration Activity (WidgetConfigActivity.kt) that fires whenever a user drags a new widget instance to their home screen. This activity should read the folder URI from DataStore, prompt the user to type a new or existing filename (e.g., journal.md), and save the mapping of that specific appWidgetId to the filename in Preferences DataStore."
+        Remove the draft tags and the text inside them from their current position.
 
-Prompt 4: The Input Overlay Sheet
+        Format a current timestamp string (e.g., \n[YYYY-MM-DD HH:mm]\n).
 
-    Objective: Create the seamless full-body edit experience using a translucent overlay.
+        Append the timestamp and the extracted draft text into the main permanent history area of the file.
 
-    "Create a new Activity named WidgetEditActivity.kt. In AndroidManifest.xml, configure this activity with a translucent theme (@android:style/Theme.Translucent.NoTitleBar) and set android:windowSoftInputMode="adjustResize".
+        Re-append clean, empty draft boundaries (\n) to the very end of the file.
 
-    Update the Jetpack Glance widget body container so that clicking anywhere on it launches WidgetEditActivity via a PendingIntent, passing the current appWidgetId.
+    Overwrite the file with this finalized text layout and force-refresh the widget view so it goes blank.
 
-    Inside WidgetEditActivity, use Jetpack Compose to build a full-screen layout:
-
-        The upper portion of the screen is a semi-transparent, dimmed background that closes the activity when clicked.
-
-        The lower portion contains a card-styled multi-line TextField that sits cleanly right above the keyboard.
-
-        Use a FocusRequester to automatically pull up the virtual keyboard and focus this text field immediately upon launch.
-
-        Load any existing uncommitted draft text from DataStore for this appWidgetId. As the user types, save their live input back to DataStore in real-time."
-
-Prompt 5: Commit & Markdown Append Logic
-
-    Objective: Execute the background file modification when hitting "Commit".
-
-    "Implement the 'Commit' functionality for the widget. When the checkmark button in the widget's top nav bar is clicked, trigger an Android BroadcastReceiver or background worker.
-
-    The background logic must:
-
-        Retrieve the appWidgetId from the click intent.
-
-        Fetch the corresponding uncommitted draft text and file name from DataStore.
-
-        Resolve the target file using DocumentFile.fromTreeUri targeting the saved vault folder URI. If the file doesn't exist, create it.
-
-        Format a current timestamp string using a customizable template (defaulting to \n[YYYY-MM-DD HH:mm]\n).
-
-        Safely open a file output stream, append the timestamp, append the uncommitted text draft, and append a trailing newline.
-
-        Clear the uncommitted draft from DataStore for that widget ID and trigger a widget UI refresh so the widget canvas returns to blank."
-
-Prompt 6: Full App Editor View
-
-    Objective: Connect the "Open" button to a full history editor in the main app.
-
-    "Update the 'Open' button in the Jetpack Glance widget top navigation bar. When clicked, it should launch MainActivity, passing the file path or name associated with that widget instance.
-
-    Update MainActivity.kt to handle this incoming intent. If a filename is passed, read the entire contents of that Markdown file from the linked storage tree and display it in a beautiful, full-screen scrollable text editor so the user can review or manually edit the whole file history."
-
-    💡 Workflow Reminder: Put these prompts into a .txt file locally. Push your code to GitHub, grab the .apk from the Actions tab when it turns green, and deploy it to your phone using adb install app-debug.apk to test each step.
+Ensure all file system operations run safely on a background dispatcher (like Dispatchers.IO) to avoid UI stuttering. Let's make these updates step-by-step. Let me know which file you want to refactor first.

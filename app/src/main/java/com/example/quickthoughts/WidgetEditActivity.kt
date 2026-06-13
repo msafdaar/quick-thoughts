@@ -19,6 +19,14 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import kotlinx.coroutines.launch
 
+import kotlinx.coroutines.flow.first
+import android.net.Uri
+import androidx.documentfile.provider.DocumentFile
+import androidx.glance.appwidget.updateAll
+
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
 class WidgetEditActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -48,49 +56,99 @@ fun EditOverlayScreen(appWidgetId: Int, onDismiss: () -> Unit) {
     val vaultManager = remember { VaultManager(context) }
     val focusRequester = remember { FocusRequester() }
     
-    // Initial draft text from DataStore
-    val initialDraft by vaultManager.getDraftFlow(appWidgetId).collectAsState(initial = "")
-    var text by remember(initialDraft) { mutableStateOf(initialDraft ?: "") }
+    var text by remember { mutableStateOf("") }
+    var isLoaded by remember { mutableStateOf(false) }
+
+    LaunchedEffect(appWidgetId) {
+        withContext(Dispatchers.IO) {
+            val vaultUriStr = vaultManager.vaultUriFlow.first()
+            val filename = vaultManager.getFilenameFlow(appWidgetId).first()
+            
+            if (vaultUriStr != null && filename != null) {
+                val vaultUri = Uri.parse(vaultUriStr)
+                val tree = DocumentFile.fromTreeUri(context, vaultUri)
+                val file = tree?.findFile(filename)
+                
+                if (file != null) {
+                    context.contentResolver.openInputStream(file.uri)?.use { input ->
+                        val fullText = input.bufferedReader().readText()
+                        text = FileHelper.extractDraftFromFile(fullText)
+                    }
+                }
+            }
+            isLoaded = true
+        }
+    }
+
+    val saveAndDismiss = {
+        scope.launch {
+            withContext(Dispatchers.IO) {
+                val vaultUriStr = vaultManager.vaultUriFlow.first()
+                val filename = vaultManager.getFilenameFlow(appWidgetId).first()
+                
+                if (vaultUriStr != null && filename != null) {
+                    val vaultUri = Uri.parse(vaultUriStr)
+                    val tree = DocumentFile.fromTreeUri(context, vaultUri)
+                    var file = tree?.findFile(filename)
+                    
+                    if (file == null && tree != null) {
+                        file = tree.createFile("text/markdown", filename)
+                    }
+                    
+                    if (file != null) {
+                        val fullText = context.contentResolver.openInputStream(file.uri)?.use { 
+                            it.bufferedReader().readText()
+                        } ?: ""
+                        
+                        val updatedText = FileHelper.updateFileWithDraft(fullText, text)
+                        
+                        context.contentResolver.openOutputStream(file.uri, "w")?.use { output ->
+                            output.write(updatedText.toByteArray())
+                        }
+                        DraftWidget().updateAll(context)
+                    }
+                }
+            }
+            onDismiss()
+        }
+    }
 
     Box(
         modifier = Modifier
             .fillMaxSize()
             .background(Color.Black.copy(alpha = 0.4f))
-            .clickable { onDismiss() }
+            .clickable { saveAndDismiss() }
     ) {
-        Card(
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .imePadding() // Adjust for keyboard
-                .padding(16.dp)
-                .clickable(enabled = false) { /* Prevent dismissal when clicking card */ },
-            shape = RoundedCornerShape(16.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                TextField(
-                    value = text,
-                    onValueChange = { 
-                        text = it
-                        scope.launch {
-                            vaultManager.saveDraft(appWidgetId, it)
-                        }
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .heightIn(min = 120.dp)
-                        .focusRequester(focusRequester),
-                    placeholder = { Text("What's on your mind?") },
-                    colors = TextFieldDefaults.colors(
-                        focusedContainerColor = Color.Transparent,
-                        unfocusedContainerColor = Color.Transparent,
-                        disabledContainerColor = Color.Transparent,
+        if (isLoaded) {
+            Card(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .imePadding()
+                    .padding(16.dp)
+                    .clickable(enabled = false) { },
+                shape = RoundedCornerShape(16.dp),
+                elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    TextField(
+                        value = text,
+                        onValueChange = { text = it },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 120.dp)
+                            .focusRequester(focusRequester),
+                        placeholder = { Text("What's on your mind?") },
+                        colors = TextFieldDefaults.colors(
+                            focusedContainerColor = Color.Transparent,
+                            unfocusedContainerColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent,
+                        )
                     )
-                )
-                
-                LaunchedEffect(Unit) {
-                    focusRequester.requestFocus()
+                    
+                    LaunchedEffect(Unit) {
+                        focusRequester.requestFocus()
+                    }
                 }
             }
         }

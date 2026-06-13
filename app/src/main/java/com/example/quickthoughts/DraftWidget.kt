@@ -35,6 +35,12 @@ import androidx.glance.action.actionStartActivity
 
 import androidx.glance.appwidget.action.actionRunCallback
 
+import android.net.Uri
+import androidx.documentfile.provider.DocumentFile
+
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
 class DraftWidget : GlanceAppWidget() {
 
     override val stateDefinition: GlanceStateDefinition<*> = PreferencesGlanceStateDefinition
@@ -43,8 +49,23 @@ class DraftWidget : GlanceAppWidget() {
         val vaultManager = VaultManager(context)
         // Extract the actual widget ID from GlanceId
         val appWidgetId = id.toString().substringAfter("AppWidgetId(").substringBefore(")").toIntOrNull() ?: -1
+        val vaultUriStr = vaultManager.vaultUriFlow.first()
         val filename = vaultManager.getFilenameFlow(appWidgetId).first() ?: "Unknown"
-        val draftText = vaultManager.getDraftFlow(appWidgetId).first() ?: ""
+        
+        var draftText = ""
+        withContext(Dispatchers.IO) {
+            if (vaultUriStr != null && filename != "Unknown") {
+                val vaultUri = Uri.parse(vaultUriStr)
+                val tree = DocumentFile.fromTreeUri(context, vaultUri)
+                val file = tree?.findFile(filename)
+                if (file != null) {
+                    context.contentResolver.openInputStream(file.uri)?.use { input ->
+                        val fullText = input.bufferedReader().readText()
+                        draftText = FileHelper.extractDraftFromFile(fullText)
+                    }
+                }
+            }
+        }
 
         provideContent {
             Column(
@@ -93,7 +114,10 @@ class DraftWidget : GlanceAppWidget() {
                             )
                         )
                 ) {
-                    Text(text = if (draftText.isEmpty()) "Tap to write..." else draftText)
+                    Text(
+                        text = if (draftText.isEmpty()) "Tap to sketch a thought..." else draftText,
+                        style = TextStyle(color = ColorProvider(if (draftText.isEmpty()) Color.Gray else Color.Black))
+                    )
                 }
             }
         }

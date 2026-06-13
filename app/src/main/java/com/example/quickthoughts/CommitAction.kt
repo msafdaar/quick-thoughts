@@ -12,6 +12,9 @@ import kotlinx.coroutines.flow.first
 import java.text.SimpleDateFormat
 import java.util.*
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
+
 class CommitAction : ActionCallback {
     override suspend fun onAction(
         context: Context,
@@ -21,32 +24,27 @@ class CommitAction : ActionCallback {
         val appWidgetId = glanceId.toString().substringAfter("AppWidgetId(").substringBefore(")").toIntOrNull() ?: return
         val vaultManager = VaultManager(context)
 
-        val vaultUriStr = vaultManager.vaultUriFlow.first() ?: return
-        val filename = vaultManager.getFilenameFlow(appWidgetId).first() ?: return
-        val draftText = vaultManager.getDraftFlow(appWidgetId).first() ?: ""
+        withContext(Dispatchers.IO) {
+            val vaultUriStr = vaultManager.vaultUriFlow.first() ?: return@withContext
+            val filename = vaultManager.getFilenameFlow(appWidgetId).first() ?: return@withContext
 
-        if (draftText.isBlank()) return
+            val vaultUri = Uri.parse(vaultUriStr)
+            val tree = DocumentFile.fromTreeUri(context, vaultUri) ?: return@withContext
+            val file = tree.findFile(filename) ?: return@withContext
 
-        val vaultUri = Uri.parse(vaultUriStr)
-        val tree = DocumentFile.fromTreeUri(context, vaultUri) ?: return
+            val fullText = context.contentResolver.openInputStream(file.uri)?.use { 
+                it.bufferedReader().readText()
+            } ?: return@withContext
 
-        // Find or create the file
-        var file = tree.findFile(filename)
-        if (file == null) {
-            file = tree.createFile("text/markdown", filename)
-        }
-
-        if (file != null) {
             val timestamp = SimpleDateFormat("\n[yyyy-MM-dd HH:mm]\n", Locale.getDefault()).format(Date())
-            val contentToAppend = timestamp + draftText + "\n"
+            val updatedText = FileHelper.commitDraft(fullText, timestamp)
 
-            context.contentResolver.openOutputStream(file.uri, "wa")?.use { outputStream ->
-                outputStream.write(contentToAppend.toByteArray())
+            if (updatedText != null) {
+                context.contentResolver.openOutputStream(file.uri, "w")?.use { output ->
+                    output.write(updatedText.toByteArray())
+                }
+                DraftWidget().updateAll(context)
             }
-
-            // Clear draft and refresh widget
-            vaultManager.saveDraft(appWidgetId, "")
-            DraftWidget().updateAll(context)
         }
     }
 }
