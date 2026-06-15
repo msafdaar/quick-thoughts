@@ -19,7 +19,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 
 class MainActivity : ComponentActivity() {
-    private lateinit var viewModel: MainViewModel
+    private lateinit var mainViewModel: MainViewModel
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -27,10 +27,10 @@ class MainActivity : ComponentActivity() {
         val repository = DraftRepository(applicationContext)
         
         setContent {
-            viewModel = viewModel(
+            mainViewModel = viewModel(
                 factory = object : ViewModelProvider.Factory {
+                    @Suppress("UNCHECKED_CAST")
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        @Suppress("UNCHECKED_CAST")
                         return MainViewModel(repository) as T
                     }
                 }
@@ -40,15 +40,15 @@ class MainActivity : ComponentActivity() {
                 modifier = Modifier.fillMaxSize(),
                 color = MaterialTheme.colorScheme.background
             ) {
-                QuickThoughtsApp(viewModel)
+                QuickThoughtsApp(mainViewModel)
             }
         }
     }
 
     override fun onPause() {
         super.onPause()
-        if (::viewModel.isInitialized) {
-            viewModel.saveDraft()
+        if (::mainViewModel.isInitialized) {
+            mainViewModel.saveDraft()
         }
     }
 }
