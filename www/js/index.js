@@ -86,7 +86,7 @@ async function saveFile() {
     }
 
     try {
-        const base64Data = btoa(unescape(encodeURIComponent(newContent)));
+        const base64Data = bufferToBase64(new TextEncoder().encode(newContent));
         const params = {
             uri: currentFileUri,
             data: base64Data
@@ -99,6 +99,16 @@ async function saveFile() {
         console.error('Error saving file:', err);
         setStatus('Error saving changes: ' + err);
     }
+}
+
+function bufferToBase64(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
 }
 
 function setStatus(msg) {
