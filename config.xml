@@ -11,7 +11,7 @@
     <allow-intent href="https://*/*" />
     <preference name="LogLevel" value="DEBUG" />
     <preference name="AndroidPersistentFileLocation" value="Internal" />
-    <plugin name="cordova-plugin-saf-mediastore" spec="^1.1.0" />
+    <plugin name="cordova-plugin-saf-mediastore" spec="^1.0.15" />
     <platform name="android">
         <allow-intent href="market:*" />
         <preference name="AndroidXEnabled" value="true" />
