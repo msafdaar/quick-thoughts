@@ -20,17 +20,21 @@ jobs:
         distribution: 'zulu'
         java-version: '21'
 
-    - name: Setup Global Gradle
+    - name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
       with:
-        gradle-version: 8.9 # Tells GitHub to install Gradle globally, bypassing the missing 'gradlew' script!
+        gradle-version: 8.9
+
+    - name: List files for debugging
+      run: ls -R
 
     - name: Assemble Debug APK
-      run: gradle assembleDebug --stacktrace --info --scan --no-daemon
+      run: gradle assembleDebug --stacktrace
 
     - name: Upload Compiled APK Artifacts
       uses: actions/upload-artifact@v4
       with:
         name: app-debug-apk
         path: app/build/outputs/apk/debug/app-debug.apk
+        if-no-files-found: error
         retention-days: 7
