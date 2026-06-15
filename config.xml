@@ -1,0 +1,19 @@
+<?xml version='1.0' encoding='utf-8'?>
+<widget id="com.quickthoughts.app" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:cdv="http://cordova.apache.org/ns/1.0">
+    <name>QuickThoughts</name>
+    <description>A simple app to manage drafts in markdown files.</description>
+    <author email="dev@example.com" href="http://example.com">
+        Gemini CLI
+    </author>
+    <content src="index.html" />
+    <access origin="*" />
+    <allow-intent href="http://*/*" />
+    <allow-intent href="https://*/*" />
+    <preference name="LogLevel" value="DEBUG" />
+    <preference name="AndroidPersistentFileLocation" value="Internal" />
+    <plugin name="cordova-plugin-saf-mediastore" spec="^1.1.0" />
+    <platform name="android">
+        <allow-intent href="market:*" />
+        <preference name="AndroidXEnabled" value="true" />
+    </platform>
+</widget>
